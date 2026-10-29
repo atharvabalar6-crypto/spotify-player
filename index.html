@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#121212]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify — Web Player & Personal Streaming Server</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DB954'><circle cx='12' cy='12' r='12'/><path fill='%23000' d='M17.9 10.8c-.4-.2-1-.1-1.3.3-1.6 2.4-4.5 2.8-7.2 2-1-.3-1.4-.8-1.7-.8-.4 0-.8.3-.8.7 0 .5.3.8.8 1 3.2.9 6.7.5 8.7-2.4.3-.5.1-1.1-.3-1.4zm1.2-2.8c-.4-.3-1.2-.1-1.5.3-2.1 2.9-5.7 3.6-9.1 2.6-1.1-.3-1.6-1-2-.9-.5 0-.9.4-.9.9 0 .5.3.9 1 1.1 3.9 1.1 8.1.3 10.6-3.1.4-.5.2-1.3-.3-1.6zm.2-2.9c-.6-.4-1.5-.2-1.9.4-2.7 3.6-7.3 4.6-11.7 3.3-1.3-.4-2-1.2-2.5-1.1-.6 0-1.1.5-1.1 1.1 0 .6.4 1.1 1.2 1.4 5 1.5 10.3.3 13.5-4 0-.6-.3-1.6-.7-1.9z'/></svg>">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Spotify Styling -->
+  <link rel="stylesheet" href="/static/css/spotify.css">
+</head>
+<body class="h-full flex flex-col antialiased text-white select-none">
+
+  <!-- Drag & Drop Overlay -->
+  <div id="dropOverlay" class="fixed inset-0 bg-black/85 z-50 hidden flex-col items-center justify-center border-4 border-dashed border-[#1DB954] transition">
+    <div class="w-20 h-20 rounded-full bg-[#1DB954]/20 flex items-center justify-center text-[#1DB954] mb-4 animate-bounce">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+    </div>
+    <div class="text-2xl font-bold text-white mb-2">Drop your music files here</div>
+    <div class="text-sm text-slate-400">Supports MP3, FLAC, M4A, WAV, and OGG formats</div>
+  </div>
+
+  <!-- App Wrapper (Sidebar + Main + Right Drawer) -->
+  <div class="flex-1 flex overflow-hidden p-2 gap-2">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-64 bg-[#121212] flex flex-col gap-2 flex-shrink-0">
+      
+      <!-- Top Navigation Box -->
+      <div class="bg-[#181818] rounded-xl p-4 flex flex-col gap-3">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 mb-2 px-1 cursor-pointer" onclick="switchView('home')">
+          <svg class="w-8 h-8 text-[#1DB954] fill-current" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="12" fill="#1DB954"/>
+            <path fill="#000" d="M17.9 10.8c-.4-.2-1-.1-1.3.3-1.6 2.4-4.5 2.8-7.2 2-1-.3-1.4-.8-1.7-.8-.4 0-.8.3-.8.7 0 .5.3.8.8 1 3.2.9 6.7.5 8.7-2.4.3-.5.1-1.1-.3-1.4zm1.2-2.8c-.4-.3-1.2-.1-1.5.3-2.1 2.9-5.7 3.6-9.1 2.6-1.1-.3-1.6-1-2-.9-.5 0-.9.4-.9.9 0 .5.3.9 1 1.1 3.9 1.1 8.1.3 10.6-3.1.4-.5.2-1.3-.3-1.6zm.2-2.9c-.6-.4-1.5-.2-1.9.4-2.7 3.6-7.3 4.6-11.7 3.3-1.3-.4-2-1.2-2.5-1.1-.6 0-1.1.5-1.1 1.1 0 .6.4 1.1 1.2 1.4 5 1.5 10.3.3 13.5-4 0-.6-.3-1.6-.7-1.9z"/>
+          </svg>
+          <span class="font-bold text-lg tracking-tight">Spotify</span>
+        </div>
+
+        <!-- Links -->
+        <div id="navHome" class="nav-link flex items-center gap-4 text-slate-400 hover:text-white cursor-pointer transition font-bold text-sm px-1 py-1 text-white">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 3l9 8h-3v10h-5v-6h-2v6h-5v-10h-3l9-8z"/></svg>
+          <span>Home</span>
+        </div>
+        <div id="navSearch" class="nav-link flex items-center gap-4 text-slate-400 hover:text-white cursor-pointer transition font-bold text-sm px-1 py-1">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <span>Search</span>
+        </div>
+      </div>
+
+      <!-- Your Library Box -->
+      <div class="bg-[#181818] rounded-xl p-3 flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-2 mb-3">
+          <div id="navLibrary" class="nav-link flex items-center gap-2.5 text-slate-400 hover:text-white cursor-pointer font-bold text-sm">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+            <span>Your Library</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="btnCreatePlaylist" class="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition" title="Create Playlist">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+            <label class="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer" title="Upload Audio File">
+              <input type="file" id="fileUploadInput" class="hidden" multiple accept="audio/*" onchange="uploadAudioFile(this.files[0])">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            </label>
+          </div>
+        </div>
+
+        <!-- Liked Songs Quick Pill -->
+        <div id="navLiked" class="nav-link flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer mb-2 group transition"
+             onclick="switchView('liked')">
+          <div class="w-10 h-10 rounded-md bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+            <svg class="w-5 h-5 fill-white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+          <div class="truncate">
+            <div class="font-bold text-sm text-white group-hover:text-[#1DB954] transition truncate">Liked Songs</div>
+            <div class="text-xs text-slate-400">Playlist • Auto</div>
+          </div>
+        </div>
+
+        <!-- Custom Playlists List -->
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 mt-2 mb-1">Playlists</div>
+        <div id="sidebarPlaylists" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-0.5">
+          <!-- Populated by ui.js -->
+        </div>
+
+        <!-- Bottom Library Stats -->
+        <div class="pt-3 border-t border-white/5 text-[11px] text-slate-500 px-2 truncate" id="libraryStatsBadge">
+          Local Music Library • Streaming
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN SCROLLABLE CONTENT AREA -->
+    <main id="mainContent" class="flex-1 bg-[#181818] rounded-xl overflow-y-auto flex flex-col relative">
+
+      <!-- Sticky Top Header Bar -->
+      <header class="sticky top-0 z-30 bg-[#181818]/90 backdrop-blur-md px-6 py-3 flex items-center justify-between border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <button class="w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 flex items-center justify-center text-slate-300 hover:text-white transition" onclick="history.back()">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="15 6 9 12 15 18 15 6"></polygon></svg>
+          </button>
+          <button class="w-8 h-8 rounded-full bg-black/50 hover:bg-black/80 flex items-center justify-center text-slate-300 hover:text-white transition" onclick="history.forward()">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="9 6 15 12 9 18 9 6"></polygon></svg>
+          </button>
+
+          <!-- Search Input Bar (Visible in Search View) -->
+          <div id="headerSearchBar" class="relative ml-2 w-72 md:w-96">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="searchInput" placeholder="What do you want to play?"
+                   class="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] text-white text-xs md:text-sm rounded-full pl-10 pr-4 py-2 border border-transparent focus:border-white/20 outline-none transition placeholder:text-slate-500">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="fetch('/api/scan', {method:'POST'}).then(() => loadInitialData())"
+                  class="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition flex items-center gap-1.5"
+                  title="Rescan music folder on disk">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span>Scan Library</span>
+          </button>
+
+          <!-- User avatar / indicator -->
+          <div class="w-8 h-8 rounded-full bg-[#1DB954] text-black font-extrabold flex items-center justify-center text-xs shadow-md">
+            SP
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW 1: HOME -->
+      <section id="viewHome" class="p-6 flex flex-col gap-8">
+        <!-- Greetings -->
+        <div>
+          <h1 id="homeGreeting" class="text-3xl font-extrabold tracking-tight mb-5">Good evening</h1>
+          <!-- Top 6 Quick Cards -->
+          <div id="homeQuickCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- Populated by ui.js -->
+          </div>
+        </div>
+
+        <!-- Made For You / Featured Tracks -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold tracking-tight">Made For You</h2>
+            <span class="text-xs font-bold text-slate-400 hover:text-white cursor-pointer">Show all</span>
+          </div>
+          <div id="homeTrackCards" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <!-- Populated by ui.js -->
+          </div>
+        </div>
+
+        <!-- All Tracks Table -->
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight mb-4">All Library Songs</h2>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs text-slate-400 border-b border-white/10 uppercase tracking-wider">
+                <th class="py-2 px-3 w-10 text-center">#</th>
+                <th class="py-2 px-3">Title</th>
+                <th class="py-2 px-3 hidden md:table-cell">Album</th>
+                <th class="py-2 px-3 text-right">Time</th>
+              </tr>
+            </thead>
+            <tbody id="homeTrackTable" class="divide-y divide-white/5">
+              <!-- Populated by ui.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 2: SEARCH -->
+      <section id="viewSearch" class="p-6 flex flex-col gap-6 hidden">
+        <div>
+          <h1 class="text-2xl font-bold mb-4">Browse All Genres & Tracks</h1>
+          <!-- Genre Tags -->
+          <div class="flex flex-wrap gap-2 mb-6">
+            <button class="px-4 py-2 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/50 text-xs font-bold text-[#1DB954] hover:bg-[#1DB954]/30" onclick="performSearch('Chill')">Chill / Lo-Fi</button>
+            <button class="px-4 py-2 rounded-full bg-pink-500/20 border border-pink-500/50 text-xs font-bold text-pink-400 hover:bg-pink-500/30" onclick="performSearch('Synthwave')">Synthwave</button>
+            <button class="px-4 py-2 rounded-full bg-blue-500/20 border border-blue-500/50 text-xs font-bold text-blue-400 hover:bg-blue-500/30" onclick="performSearch('Ambient')">Ambient</button>
+            <button class="px-4 py-2 rounded-full bg-amber-500/20 border border-amber-500/50 text-xs font-bold text-amber-400 hover:bg-amber-500/30" onclick="performSearch('Electronic')">Electronic</button>
+            <button class="px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/50 text-xs font-bold text-purple-400 hover:bg-purple-500/30" onclick="performSearch('Cyberpunk')">Cyberpunk</button>
+          </div>
+          <!-- Results Container -->
+          <div id="searchResults" class="bg-[#121212]/50 p-4 rounded-xl border border-white/5 min-h-[300px]">
+            <!-- Results rendered here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: LIKED SONGS -->
+      <section id="viewLiked" class="flex flex-col hidden">
+        <!-- Hero Header -->
+        <div class="bg-gradient-to-b from-indigo-900 to-[#181818] p-8 flex items-end gap-6 shadow-2xl">
+          <div class="w-44 h-44 rounded-lg bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 flex items-center justify-center shadow-2xl flex-shrink-0">
+            <svg class="w-20 h-20 fill-white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </div>
+          <div>
+            <div class="text-xs uppercase font-extrabold tracking-widest text-slate-300">Playlist</div>
+            <h1 class="text-4xl md:text-6xl font-black text-white mt-1 mb-3">Liked Songs</h1>
+            <div class="text-xs text-slate-300 flex items-center gap-2">
+              <span class="font-bold text-white">Your Profile</span>
+              <span>•</span>
+              <span id="likedCountBadge">0 songs</span>
+            </div>
+          </div>
+        </div>
+        <!-- Table -->
+        <div class="p-6">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs text-slate-400 border-b border-white/10 uppercase tracking-wider">
+                <th class="py-2 px-3 w-10 text-center">#</th>
+                <th class="py-2 px-3">Title</th>
+                <th class="py-2 px-3 hidden md:table-cell">Album</th>
+                <th class="py-2 px-3 text-right">Time</th>
+              </tr>
+            </thead>
+            <tbody id="likedTrackTable" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 4: PLAYLIST DETAIL -->
+      <section id="viewPlaylist" class="flex flex-col hidden">
+        <!-- Hero Header -->
+        <div class="bg-gradient-to-b from-emerald-950 to-[#181818] p-8 flex items-end gap-6 shadow-2xl">
+          <div id="playlistHeaderCover" class="w-44 h-44 rounded-lg bg-[#1DB954] flex items-center justify-center shadow-2xl flex-shrink-0 text-white font-black text-5xl">
+            ♫
+          </div>
+          <div>
+            <div class="text-xs uppercase font-extrabold tracking-widest text-slate-300">Playlist</div>
+            <h1 id="playlistName" class="text-4xl md:text-6xl font-black text-white mt-1 mb-2">Playlist Name</h1>
+            <div id="playlistDesc" class="text-sm text-slate-400 mb-2">Playlist description</div>
+            <div class="text-xs text-slate-300 flex items-center gap-2">
+              <span class="font-bold text-white">Spotify Server</span>
+              <span>•</span>
+              <span id="playlistMetaBadge">0 songs</span>
+            </div>
+          </div>
+        </div>
+        <!-- Table -->
+        <div class="p-6">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs text-slate-400 border-b border-white/10 uppercase tracking-wider">
+                <th class="py-2 px-3 w-10 text-center">#</th>
+                <th class="py-2 px-3">Title</th>
+                <th class="py-2 px-3 hidden md:table-cell">Album</th>
+                <th class="py-2 px-3 text-right">Time</th>
+              </tr>
+            </thead>
+            <tbody id="playlistTrackTable" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- RIGHT DRAWER (LYRICS & QUEUE) -->
+    <aside id="rightDrawer" class="w-80 bg-[#181818] rounded-xl p-4 flex flex-col gap-4 hidden overflow-hidden flex-shrink-0">
+      
+      <!-- Drawer: Lyrics -->
+      <div id="drawerLyrics" class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+          <span class="font-bold text-sm tracking-wide">Lyrics</span>
+          <button onclick="toggleDrawer('lyrics')" class="text-slate-400 hover:text-white text-xs">✕ Close</button>
+        </div>
+        <div id="lyricsLinesContainer" class="flex-1 overflow-y-auto pr-2 space-y-2 text-center py-8">
+          <!-- Lyrics lines sync here -->
+        </div>
+      </div>
+
+      <!-- Drawer: Queue -->
+      <div id="drawerQueue" class="flex-1 flex flex-col overflow-hidden hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+          <span class="font-bold text-sm tracking-wide">Queue</span>
+          <button onclick="toggleDrawer('queue')" class="text-slate-400 hover:text-white text-xs">✕ Close</button>
+        </div>
+        <div id="queueList" class="flex-1 overflow-y-auto pr-1 space-y-1">
+          <!-- Queue items -->
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- BOTTOM PERSISTENT PLAYER BAR -->
+  <footer class="h-20 bg-black border-t border-white/10 px-4 flex items-center justify-between z-40">
+
+    <!-- Left: Now Playing Info -->
+    <div class="flex items-center gap-3.5 w-1/4 min-w-[200px]">
+      <img id="currentCover" src="/api/cover/1" class="w-14 h-14 rounded-md object-cover bg-slate-900 shadow-md flex-shrink-0" alt="Cover" />
+      <div class="truncate">
+        <div id="currentTitle" class="font-bold text-sm text-white hover:underline cursor-pointer truncate">Select a song</div>
+        <div id="currentArtist" class="text-xs text-slate-400 hover:underline cursor-pointer truncate">Spotify Server</div>
+      </div>
+      <button id="btnLikeCurrent" class="text-slate-500 hover:text-white ml-2 transition flex-shrink-0" title="Save to Liked Songs">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>
+
+    <!-- Center: Playback Controls & Progress Bar -->
+    <div class="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
+      <!-- Buttons -->
+      <div class="flex items-center gap-5">
+        <button id="btnShuffle" class="text-slate-400 hover:text-white transition" title="Enable Shuffle">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+        </button>
+        <button id="btnPrev" class="text-slate-400 hover:text-white transition" title="Previous">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="6 6 6 18 8 18 8 6 6 6"></polygon><polygon points="18 6 10 12 18 18 18 6"></polygon></svg>
+        </button>
+        <button id="btnPlay" class="w-9 h-9 rounded-full bg-white hover:scale-105 text-black flex items-center justify-center transition shadow-md" title="Play">
+          <svg id="iconPlay" class="w-4 h-4 ml-0.5 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <svg id="iconPause" class="w-4 h-4 fill-current hidden" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button id="btnNext" class="text-slate-400 hover:text-white transition" title="Next">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="6 6 14 12 6 18 6 6"></polygon><polygon points="16 6 16 18 18 18 18 6 16 6"></polygon></svg>
+        </button>
+        <button id="btnRepeat" class="text-slate-400 hover:text-white transition relative" title="Enable Repeat">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+          <span id="repeatModeBadge" class="hidden absolute -top-1 -right-1 bg-[#1DB954] text-black text-[9px] font-extrabold w-3 h-3 rounded-full flex items-center justify-center">1</span>
+        </button>
+      </div>
+
+      <!-- Scrubber -->
+      <div class="w-full flex items-center gap-2 group">
+        <span id="timeCurrent" class="text-[11px] text-slate-400 w-8 text-right">0:00</span>
+        <div class="relative flex-1 flex items-center">
+          <input type="range" id="progressSlider" min="0" max="100" value="0" class="w-full h-1 bg-[#4d4d4d] rounded-lg">
+        </div>
+        <span id="timeDuration" class="text-[11px] text-slate-400 w-8">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: Visualizer, Lyrics, Queue, Equalizer & Volume -->
+    <div class="flex items-center justify-end gap-3 w-1/4 min-w-[220px]">
+      
+      <!-- Audio Visualizer Canvas -->
+      <div class="hidden xl:flex items-center px-2" title="Real-Time Audio Spectrum Visualizer">
+        <canvas id="audioVisualizer" width="100" height="24" class="rounded opacity-80 hover:opacity-100 transition"></canvas>
+      </div>
+
+      <button id="btnToggleLyrics" class="text-slate-400 hover:text-white transition p-1" title="Lyrics">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </button>
+
+      <button id="btnToggleQueue" class="text-slate-400 hover:text-white transition p-1" title="Queue">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+      </button>
+
+      <button id="btnToggleEq" class="text-slate-400 hover:text-white transition p-1" title="Equalizer & FX">
+        <svg class="w-4 h-4 fill-none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+      </button>
+
+      <div class="flex items-center gap-1.5 group w-24">
+        <button id="btnMute" class="text-slate-400 hover:text-white transition">
+          <svg id="iconVolHigh" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          <svg id="iconVolMuted" class="w-4 h-4 fill-current hidden text-red-500" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        </button>
+        <input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-16 h-1 bg-[#4d4d4d] rounded-lg">
+      </div>
+
+    </div>
+
+  </footer>
+
+  <!-- MODAL: CREATE PLAYLIST -->
+  <div id="modalCreatePlaylist" class="fixed inset-0 bg-black/75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#282828] w-full max-w-sm rounded-xl p-6 shadow-2xl border border-white/10 flex flex-col gap-4">
+      <h3 class="text-xl font-bold">Create New Playlist</h3>
+      <div>
+        <label class="text-xs text-slate-400 font-semibold mb-1 block">Name</label>
+        <input type="text" id="inputPlaylistName" placeholder="My Playlist #1" class="w-full bg-[#3e3e3e] text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#1DB954]">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 font-semibold mb-1 block">Description</label>
+        <textarea id="inputPlaylistDesc" rows="2" placeholder="Give your playlist a catchy description" class="w-full bg-[#3e3e3e] text-white text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#1DB954] resize-none"></textarea>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('modalCreatePlaylist').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white">Cancel</button>
+        <button id="btnSubmitPlaylist" class="px-5 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs rounded-full shadow-lg">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD TO PLAYLIST -->
+  <div id="modalAddToPlaylist" class="fixed inset-0 bg-black/75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#282828] w-full max-w-xs rounded-xl p-5 shadow-2xl border border-white/10 flex flex-col gap-3">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="font-bold text-sm">Add to Playlist</h3>
+        <button onclick="document.getElementById('modalAddToPlaylist').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+      <div id="playlistOptionsList" class="flex flex-col gap-1 max-h-60 overflow-y-auto">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: 5-BAND EQUALIZER & PRESETS -->
+  <div id="modalEqualizer" class="fixed inset-0 bg-black/75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#282828] w-full max-w-md rounded-xl p-6 shadow-2xl border border-white/10 flex flex-col gap-5">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <span class="text-[#1DB954] font-black">♫</span>
+          <h3 class="font-bold text-base">Graphic Equalizer</h3>
+        </div>
+        <button onclick="document.getElementById('modalEqualizer').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+
+      <!-- Presets -->
+      <div class="flex flex-wrap gap-1.5">
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="flat">Flat</button>
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="bass">Bass Boost</button>
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="vocal">Vocal</button>
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="pop">Pop</button>
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="rock">Rock</button>
+        <button class="eq-preset-btn px-2.5 py-1 bg-white/10 hover:bg-[#1DB954] hover:text-black rounded-full text-xs font-semibold transition" data-preset="electronic">Electronic</button>
+      </div>
+
+      <!-- 5 Sliders (60Hz, 310Hz, 1kHz, 6kHz, 16kHz) -->
+      <div class="grid grid-cols-5 gap-3 py-4 text-center">
+        <div>
+          <input type="range" id="eqSlider0" min="-12" max="12" value="0" step="1" class="h-28 -rotate-90 my-8 w-20">
+          <div class="text-[11px] text-slate-400 mt-2">60 Hz</div>
+        </div>
+        <div>
+          <input type="range" id="eqSlider1" min="-12" max="12" value="0" step="1" class="h-28 -rotate-90 my-8 w-20">
+          <div class="text-[11px] text-slate-400 mt-2">310 Hz</div>
+        </div>
+        <div>
+          <input type="range" id="eqSlider2" min="-12" max="12" value="0" step="1" class="h-28 -rotate-90 my-8 w-20">
+          <div class="text-[11px] text-slate-400 mt-2">1 kHz</div>
+        </div>
+        <div>
+          <input type="range" id="eqSlider3" min="-12" max="12" value="0" step="1" class="h-28 -rotate-90 my-8 w-20">
+          <div class="text-[11px] text-slate-400 mt-2">6 kHz</div>
+        </div>
+        <div>
+          <input type="range" id="eqSlider4" min="-12" max="12" value="0" step="1" class="h-28 -rotate-90 my-8 w-20">
+          <div class="text-[11px] text-slate-400 mt-2">16 kHz</div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <button onclick="document.getElementById('modalEqualizer').classList.add('hidden')" class="px-5 py-2 bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs rounded-full">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/player.js"></script>
+  <script src="/static/js/ui.js"></script>
+</body>
+</html>
+
