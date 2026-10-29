@@ -1,6 +1,14 @@
 # Spotify — Personal Self-Hosted Music Streaming Server
 
+[![Deploy to GitHub Pages](https://github.com/atharvabalar6-crypto/spotify-player/actions/workflows/pages.yml/badge.svg)](https://github.com/atharvabalar6-crypto/spotify-player/actions/workflows/pages.yml)
+[![Live Web Player](https://img.shields.io/badge/Live%20Player-GitHub%20Pages-1DB954?logo=spotify&logoColor=white)](https://atharvabalar6-crypto.github.io/spotify-player/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/atharvabalar6-crypto/spotify-player)
+
 A personal, self-hosted music streaming server and web player styled after Spotify's desktop & web interface.
+
+> 🌐 **Live 24/7 Web App**: [https://atharvabalar6-crypto.github.io/spotify-player/](https://atharvabalar6-crypto.github.io/spotify-player/)  
+> 💻 **GitHub Repository**: [https://github.com/atharvabalar6-crypto/spotify-player](https://github.com/atharvabalar6-crypto/spotify-player)  
+> 🏠 **Local Streaming Host**: `http://localhost:8080` (Run with `run.bat` or `python app.py`)
 
 Built with a lightweight **Python (Flask)** backend with HTTP Range-based audio streaming and a **Modern HTML5 / Tailwind CSS / Vanilla JS** frontend.
 
