@@ -1,3 +1,50 @@
+
+let currentPlaylistTracks = [];
+let currentLikedTracks = [];
+
+async function playPlaylistById(playlistId) {
+  try {
+    const res = await fetch(`/api/playlists/${playlistId}`).then(r => r.json());
+    if (res && res.success && res.tracks && res.tracks.length > 0) {
+      currentPlaylistTracks = res.tracks;
+      player.setQueue(res.tracks);
+      player.loadTrack(res.tracks[0]);
+      player.play();
+      return;
+    }
+  } catch (err) {}
+  
+  if (typeof STATIC_PLAYLIST_MAP !== 'undefined' && STATIC_PLAYLIST_MAP[playlistId]) {
+    const allowedIds = new Set(STATIC_PLAYLIST_MAP[playlistId]);
+    const filtered = allTracks.filter(t => allowedIds.has(t.id));
+    filtered.sort((a, b) => STATIC_PLAYLIST_MAP[playlistId].indexOf(a.id) - STATIC_PLAYLIST_MAP[playlistId].indexOf(b.id));
+    if (filtered.length > 0) {
+      currentPlaylistTracks = filtered;
+      player.setQueue(filtered);
+      player.loadTrack(filtered[0]);
+      player.play();
+    }
+  }
+}
+
+function playCurrentPlaylist() {
+  if (currentPlaylistTracks && currentPlaylistTracks.length > 0) {
+    player.setQueue(currentPlaylistTracks);
+    player.loadTrack(currentPlaylistTracks[0]);
+    player.play();
+  }
+}
+
+function playLikedSongs() {
+  const liked = currentLikedTracks.length > 0 ? currentLikedTracks : allTracks.filter(t => t.is_favorite === 1);
+  if (liked.length > 0) {
+    player.setQueue(liked);
+    player.loadTrack(liked[0]);
+    player.play();
+  }
+}
+
+
 const STATIC_PLAYLIST_MAP = {
   5: [132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172],
   4: [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89]
@@ -2558,41 +2605,82 @@ function renderSidebarPlaylists() {
 }
 
 function renderHomeView() {
-  // Top 6 Quick Cards
-  const topTracks = allTracks.slice(0, 6);
+  // Top 6 Quick Cards (Playlists & Liked Songs)
   const quickCards = document.getElementById('homeQuickCards');
-  quickCards.innerHTML = topTracks.map(t => `
-    <div class="flex items-center bg-[#242424]/60 hover:bg-[#282828] rounded-md overflow-hidden cursor-pointer group transition shadow-md relative"
-         onclick="playTrackFromList(${t.id})">
-      <img src="${t.cover_url}" class="w-16 h-16 object-cover shadow-sm flex-shrink-0" alt="${t.title}" />
-      <span class="font-bold text-sm text-white px-3 truncate flex-1">${t.title}</span>
-      <button class="w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform scale-90 group-hover:scale-100 mr-3 shadow-lg flex-shrink-0 hover:bg-[#1ed760]"
-              onclick="event.stopPropagation(); playTrackFromList(${t.id})">
-        <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-      </button>
-    </div>
-  `).join('');
+  if (quickCards) {
+    const quickItems = [
+      ...allPlaylists.map(p => ({
+        type: 'playlist',
+        id: p.id,
+        title: p.name,
+        color: p.cover_color || '#1DB954',
+        track_count: p.track_count
+      })),
+      { type: 'liked', id: 'liked', title: 'Liked Songs', color: '#6366F1', is_gradient: true }
+    ].slice(0, 6);
 
-  // Made For You Grid Cards
-  const cardsContainer = document.getElementById('homeTrackCards');
-  cardsContainer.innerHTML = allTracks.map(t => `
-    <div class="music-card bg-[#181818] p-4 rounded-xl cursor-pointer group flex flex-col relative"
-         onclick="playTrackFromList(${t.id})">
-      <div class="relative w-full aspect-square mb-3.5 rounded-lg overflow-hidden shadow-lg bg-slate-900">
-        <img src="${t.cover_url}" class="w-full h-full object-cover" alt="${t.title}" />
-        <button class="card-play-btn absolute bottom-2.5 right-2.5 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl hover:scale-105 hover:bg-[#1ed760] transition"
-                onclick="event.stopPropagation(); playTrackFromList(${t.id})">
+    quickCards.innerHTML = quickItems.map(item => `
+      <div class="flex items-center bg-[#242424]/70 hover:bg-[#2c2c2c] rounded-md overflow-hidden cursor-pointer group transition shadow-md relative"
+           onclick="${item.type === 'liked' ? `switchView('liked')` : `switchView('playlist', { id: ${item.id} })`}">
+        <div class="w-16 h-16 flex items-center justify-center font-bold text-white text-2xl flex-shrink-0 shadow-sm"
+             style="background: ${item.is_gradient ? 'linear-gradient(135deg, #4f46e5, #9333ea, #ec4899)' : item.id === 5 ? 'linear-gradient(135deg, #f59e0b, #b45309)' : item.id === 4 ? 'linear-gradient(135deg, #10b981, #047857)' : item.color};">
+          ${item.type === 'liked' ? '♥' : '♫'}
+        </div>
+        <div class="px-3 truncate flex-1 flex flex-col justify-center">
+          <span class="font-bold text-sm text-white truncate">${item.title}</span>
+          ${item.track_count ? `<span class="text-xs text-slate-400">${item.track_count} songs</span>` : ''}
+        </div>
+        <button class="w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform scale-90 group-hover:scale-100 mr-3 shadow-xl flex-shrink-0 hover:bg-[#1ed760] hover:scale-105"
+                onclick="event.stopPropagation(); ${item.type === 'liked' ? `playLikedSongs()` : `playPlaylistById(${item.id})`}">
           <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
         </button>
       </div>
-      <div class="font-bold text-sm text-white truncate mb-1">${t.title}</div>
-      <div class="text-xs text-slate-400 truncate mb-1.5">${t.artist}</div>
-      <div class="text-[11px] text-slate-500 truncate mt-auto flex items-center justify-between">
-        <span>${t.genre || 'Single'}</span>
-        <span>${t.duration_formatted}</span>
+    `).join('');
+  }
+
+  // Playlists Grid Section
+  const pCardsContainer = document.getElementById('homePlaylistCards');
+  if (pCardsContainer) {
+    pCardsContainer.innerHTML = allPlaylists.map(p => `
+      <div class="music-card bg-[#181818] p-4 rounded-xl cursor-pointer group flex flex-col relative transition hover:bg-[#282828]"
+           onclick="switchView('playlist', { id: ${p.id} })">
+        <div class="relative w-full aspect-square mb-3.5 rounded-lg overflow-hidden shadow-lg flex items-center justify-center text-4xl text-white font-bold"
+             style="background: ${p.id === 5 ? 'linear-gradient(135deg, #f59e0b, #d97706, #78350f)' : p.id === 4 ? 'linear-gradient(135deg, #10b981, #059669, #064e3b)' : p.cover_color || '#1DB954'};">
+          <svg class="w-12 h-12 fill-current opacity-85" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          <button class="card-play-btn absolute bottom-2.5 right-2.5 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl hover:scale-105 hover:bg-[#1ed760] transition"
+                  onclick="event.stopPropagation(); playPlaylistById(${p.id})">
+            <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+        </div>
+        <div class="font-bold text-sm text-white truncate mb-1">${p.name}</div>
+        <div class="text-xs text-slate-400 line-clamp-2 mb-1.5">${p.description || `${p.track_count || 0} songs`}</div>
+        <div class="text-[11px] text-slate-500 mt-auto font-medium">${p.track_count || 0} songs</div>
       </div>
-    </div>
-  `).join('');
+    `).join('');
+  }
+
+  // Made For You Grid Cards (Top 12 featured songs)
+  const cardsContainer = document.getElementById('homeTrackCards');
+  if (cardsContainer) {
+    cardsContainer.innerHTML = allTracks.slice(0, 12).map(t => `
+      <div class="music-card bg-[#181818] p-4 rounded-xl cursor-pointer group flex flex-col relative"
+           onclick="playTrackFromList(${t.id})">
+        <div class="relative w-full aspect-square mb-3.5 rounded-lg overflow-hidden shadow-lg bg-slate-900">
+          <img src="${t.cover_url}" class="w-full h-full object-cover" alt="${t.title}" />
+          <button class="card-play-btn absolute bottom-2.5 right-2.5 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl hover:scale-105 hover:bg-[#1ed760] transition"
+                  onclick="event.stopPropagation(); playTrackFromList(${t.id})">
+            <svg class="w-5 h-5 ml-0.5 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+        </div>
+        <div class="font-bold text-sm text-white truncate mb-1">${t.title}</div>
+        <div class="text-xs text-slate-400 truncate mb-1.5">${t.artist}</div>
+        <div class="text-[11px] text-slate-500 truncate mt-auto flex items-center justify-between">
+          <span>${t.genre || 'Single'}</span>
+          <span>${t.duration_formatted}</span>
+        </div>
+      </div>
+    `).join('');
+  }
 
   // Table of All Songs
   renderTrackTable(allTracks, 'homeTrackTable');
@@ -2732,6 +2820,7 @@ async function loadPlaylistView(playlistId) {
   try {
     const res = await fetch(`/api/playlists/${playlistId}`).then(r => r.json());
     if (res.success) {
+      currentPlaylistTracks = res.tracks;
       document.getElementById('playlistName').textContent = res.playlist.name;
       document.getElementById('playlistDesc').textContent = res.playlist.description || "Created for your listening pleasure";
       document.getElementById('playlistMetaBadge').textContent = `${res.tracks.length} songs`;

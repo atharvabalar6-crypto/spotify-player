@@ -142,6 +142,17 @@
           </div>
         </div>
 
+        <!-- Featured Playlists Section -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold tracking-tight">Your Playlists</h2>
+            <span class="text-xs font-bold text-slate-400 hover:text-white cursor-pointer" onclick="switchView('library')">Show all</span>
+          </div>
+          <div id="homePlaylistCards" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <!-- Populated by ui.js -->
+          </div>
+        </div>
+
         <!-- Made For You / Featured Tracks -->
         <div>
           <div class="flex items-center justify-between mb-4">
@@ -208,6 +219,21 @@
             </div>
           </div>
         </div>
+        <!-- Liked Songs Action Bar -->
+        <div class="px-8 py-5 flex items-center gap-6 bg-gradient-to-b from-[#181818] to-[#121212]">
+          <button id="btnPlayLikedSongs"
+                  class="w-14 h-14 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black flex items-center justify-center shadow-xl hover:scale-105 transition transform flex-shrink-0"
+                  onclick="playLikedSongs()"
+                  title="Play all liked songs">
+            <svg class="w-6 h-6 ml-1 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+          <button class="text-slate-400 hover:text-white transition" title="Save to Your Library">
+            <svg class="w-8 h-8 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </button>
+          <button class="text-slate-400 hover:text-white transition" title="More options">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+        </div>
         <!-- Table -->
         <div class="p-6">
           <table class="w-full text-left border-collapse">
@@ -241,6 +267,21 @@
               <span id="playlistMetaBadge">0 songs</span>
             </div>
           </div>
+        </div>
+        <!-- Playlist Action Bar -->
+        <div class="px-8 py-5 flex items-center gap-6 bg-gradient-to-b from-[#181818] to-[#121212]">
+          <button id="btnPlayEntirePlaylist"
+                  class="w-14 h-14 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black flex items-center justify-center shadow-xl hover:scale-105 transition transform flex-shrink-0"
+                  onclick="playCurrentPlaylist()"
+                  title="Play entire playlist">
+            <svg class="w-6 h-6 ml-1 fill-current" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+          <button class="text-slate-400 hover:text-white transition" title="Save to Your Library">
+            <svg class="w-8 h-8 fill-none stroke-current stroke-2" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          </button>
+          <button class="text-slate-400 hover:text-white transition" title="More options">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
         </div>
         <!-- Table -->
         <div class="p-6">

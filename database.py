@@ -150,7 +150,7 @@ def get_playlists():
         FROM playlists p
         LEFT JOIN playlist_tracks pt ON p.id = pt.playlist_id
         GROUP BY p.id
-        ORDER BY p.id ASC
+        ORDER BY track_count DESC, p.name COLLATE NOCASE ASC, p.id ASC
     """).fetchall()
     conn.close()
     return [dict(r) for r in rows]
